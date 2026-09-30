@@ -1,7 +1,9 @@
 # curio
 
-The command line shell for [Curiosity Studio](https://curiosity.ai/studio/): the sandbox Sudo, the
-admin assistant, works in, from your terminal.
+curio brings Sudo, the admin assistant of [Curiosity Studio](https://curiosity.ai/studio/), to your
+terminal. It opens the same sandbox Sudo works in: your workspace configuration as files, which you
+can edit, build and commit from your own machine and editor, with nothing applied until someone
+approves it.
 
 **Website: [curiosity.sh](https://curiosity.sh)** · Releases: [GitHub releases](https://github.com/curiosity-ai/curio/releases)
 
@@ -31,7 +33,7 @@ The executable bit does not survive a GitHub release download, so on Linux and m
 chmod +x curio-linux-x64 && mv curio-linux-x64 ~/.local/bin/curio
 ```
 
-## Model
+## How it works
 
 - A curio **session** is a Sudo conversation with its own sandbox. It is listed in the admin dock,
   and a dock session is listed in curio.
@@ -40,45 +42,22 @@ chmod +x curio-linux-x64 && mv curio-linux-x64 ~/.local/bin/curio
 - Edits stay in the session. `build` checks them against the workspace, `commit` stages them, and
   nothing is applied until the commit is approved. Same diff, same approval as the dock.
 
-## Commands
+## Two modes, one sandbox
 
-Every panel action is also a command, for scripts, CI and coding agents:
+curio is one binary with two front ends. Both act on the same sessions, so you can switch between
+them, or watch in the TUI what an agent does through the CLI.
 
-```
-curio login [--server URL] [--store auto|keyring|file|none] [--no-browser] [--approve|--no-approve]
-curio logout | whoami
-curio sessions [list | new [name] | use <id|name> | rename <name> | rm | reset | stop]
-curio run -- <command line>        curio run -f script.sh    (exit code passed through)
-curio status | diff
-curio commit [show | approve | discard]
-curio ls [path] | cat <path> | get <path> [local] | put <local> <path> | rm [-r] <path>
-curio upload <files...>
-curio skills [list [--all] | search <words> [-n N] | show <name> | install [folder] [--global] [--force]]
-```
+| | TUI | CLI |
+|---|---|---|
+| For | developers, at the keyboard | AI coding agents, scripts, CI |
+| Start | `curio` (no arguments) | `curio <command> ...` |
+| Shape | two-panel file commander: sandbox on one side, your machine on the other | one command per call, plain text output, meaningful exit codes |
+| Approving | Approve in F9, or in the browser | `curio commit approve`, or in the browser |
 
-`--server` and `--session` work on every command.
+## TUI: for developers
 
-| Exit code | Meaning |
-|---|---|
-| sandbox command's own | `curio run` |
-| 64 | usage error |
-| 75 | conflict (the file changed since you read it) |
-| 77 | not signed in |
-| 78 | not allowed |
-
-A typical edit loop:
-
-```bash
-curio sessions new fix-search
-curio get /workspace/code/endpoints/search-orders.cs .
-$EDITOR search-orders.cs
-curio put search-orders.cs /workspace/code/endpoints/search-orders.cs
-curio run -- build
-curio run -- commit
-curio commit approve
-```
-
-## Interface
+Run `curio` with no arguments. A two-panel commander in the style of Midnight Commander: one
+panel on the sandbox, the other on your machine, and a command line at the bottom.
 
 ```
 ┌ curio  https://acme.curiosity.ai  |  admin  |  session: fix-search  |  2 changed ────────────┐
@@ -110,7 +89,46 @@ curio commit approve
 Typing anywhere starts a command. It runs in the sandbox, in the active sandbox panel's directory
 (`help` lists them: `build`, `commit`, `graph`, `query`, `type`, `uid`, ...).
 
-## Coding agents
+## CLI: for AI agents and scripts
+
+Every panel action is also a subcommand. Each call does one thing, prints plain text and exits,
+which is what a coding agent or a CI job needs:
+
+```
+curio login [--server URL] [--store auto|keyring|file|none] [--no-browser] [--approve|--no-approve]
+curio logout | whoami
+curio sessions [list | new [name] | use <id|name> | rename <name> | rm | reset | stop]
+curio run -- <command line>        curio run -f script.sh    (exit code passed through)
+curio status | diff
+curio commit [show | approve | discard]
+curio ls [path] | cat <path> | get <path> [local] | put <local> <path> | rm [-r] <path>
+curio upload <files...>
+curio skills [list [--all] | search <words> [-n N] | show <name> | install [folder] [--global] [--force]]
+```
+
+`--server` and `--session` work on every command.
+
+| Exit code | Meaning |
+|---|---|
+| sandbox command's own | `curio run` |
+| 64 | usage error |
+| 75 | conflict |
+| 77 | not signed in |
+| 78 | not allowed |
+
+A typical edit loop:
+
+```bash
+curio sessions new fix-search
+curio get /workspace/code/endpoints/search-orders.cs .
+$EDITOR search-orders.cs
+curio put search-orders.cs /workspace/code/endpoints/search-orders.cs
+curio run -- build
+curio run -- commit
+curio commit approve
+```
+
+### Coding agents
 
 curio is a plain command line, so any agent that can run a shell command can work on a workspace
 through it. The agent gets a session and nothing more: its edits wait in the sandbox until a
