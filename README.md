@@ -7,25 +7,66 @@ approves it.
 
 **Website: [curiosity.sh](https://curiosity.sh)** · Releases: [GitHub releases](https://github.com/curiosity-ai/curio/releases)
 
+macOS and Linux:
+
 ```bash
-dotnet tool install --global Curiosity.Shell
-curio
+curl -fsSL https://curiosity.sh/install.sh | bash
 ```
 
-The first run asks for the workspace address, opens the browser to sign you in (any login the
-workspace supports, SSO included) and drops you into the two-panel interface. It needs a system
-administrator account.
+Windows (PowerShell):
 
-### Without the .NET SDK
+```powershell
+irm https://curiosity.sh/install.ps1 | iex
+```
+
+Or, with the .NET SDK:
+
+```bash
+dotnet tool install --global Curiosity.Shell
+```
+
+Then run `curio`. The first run asks for the workspace address, opens the browser to sign you in
+(any login the workspace supports, SSO included) and drops you into the two-panel interface. It
+needs a system administrator account.
+
+### The install scripts
+
+[`install.sh`](install.sh) and [`install.ps1`](install.ps1) (served from this repository at
+curiosity.sh) read the latest release from the GitHub API, download the single file for your
+system, check its SHA-256 against the release, and install it as `curio` (`curio.exe` on Windows)
+in `~/.curiosity/bin`. That is the folder curio already keeps its config and sign-in in
+(`~/.curiosity/curio`), so removing `~/.curiosity` removes everything. The folder is added to PATH:
+the user PATH on Windows, the profile of your shell (bash, zsh, fish) on macOS and Linux. Run the
+script again to update.
+
+Both scripts run on all three systems: `install.sh` also works in Git Bash, and `install.ps1` in
+PowerShell 7 on macOS and Linux.
+
+| Variable | Effect |
+|---|---|
+| `CURIO_VERSION` | install this release tag (`v26.9.6085`) instead of the latest |
+| `CURIO_INSTALL` | install into `$CURIO_INSTALL/bin` instead of `~/.curiosity/bin` |
+| `CURIO_NO_MODIFY_PATH=1` | leave PATH and shell profiles alone |
+
+```bash
+curl -fsSL https://curiosity.sh/install.sh | CURIO_VERSION=v26.9.6085 bash
+```
+
+### Without a script
 
 Every [release](https://github.com/curiosity-ai/curio/releases) carries self-contained single files:
 
 | Platform | Asset |
 |---|---|
 | Windows x64 | `curio-win-x64.exe` |
+| Windows Arm64 | `curio-win-arm64.exe` |
 | Linux x64 | `curio-linux-x64` |
+| Linux Arm64 | `curio-linux-arm64` |
 | macOS Apple silicon | `curio-osx-arm64` |
 | macOS Intel | `curio-osx-x64` |
+
+The Arm64 builds for Windows and Linux start with the first release after 26.9.6085. Until then
+the Windows script installs the x64 build, which Windows on Arm runs emulated.
 
 The executable bit does not survive a GitHub release download, so on Linux and macOS:
 
